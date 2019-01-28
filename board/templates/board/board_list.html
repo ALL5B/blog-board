@@ -1,0 +1,18 @@
+{% extends 'board/base.html' %}
+
+{% block content %}
+
+{% for board in board_list %}
+  <div class="card mb-3">
+    <h2 class="card-header bg-dark text-white">{{board.title}}</h2>
+    <div class="card-body">
+      <h3 class="badge badge-secondary"><span>{{board.junle}}</span></h3>
+      <h5>{{board.text}} </h5>
+      <a href="{% url 'board:detail' board.pk %}" class="btn btn-dark">書き込み</a>
+    </div>
+  </div>
+{% endfor %}
+
+
+
+{% endblock %}

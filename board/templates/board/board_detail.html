@@ -1,0 +1,119 @@
+{% extends 'board/base.html'%}
+
+
+{% block content %}
+<div class="card mb-3" board-id="{{board.pk}}">
+  <h2 class="card-header bg-dark text-white">{{board.title}}</h2>
+  <div class="card-body">
+    <p>{{ board.created_at}},{{ board.junle }}</p>
+    {{board.text| linebreaksbr}}
+  </div>
+
+</div>
+{% for chat in board.chat_set.all %}
+<div class="card">
+  <div class="card-body">
+    <p>{{chat.name}}  {{chat.created_at}}</p>
+    <p>{{chat.text}}</p>
+  </div>
+</div>
+{%endfor%}
+
+<form action ="" id="ajax-add-post" method="POST">
+  {{ form.non_field_errors }}
+  {% for field in form %}
+  <div class="form-group">
+    <label for ="{{ field.id_for_label }}">{{ field.label_tag }}</label>
+    {{field}}
+    {{field.errors}}
+  </div>
+  {%endfor%}
+  {%csrf_token%}
+  <input type="submit"  class= "btn btn-dark" value ="書き込み"></input>
+</form>
+
+{% endblock %}
+{% block extrajs %}
+    <script>
+    $(function(){
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        var csrftoken = getCookie('csrftoken');
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+
+
+
+
+
+
+
+        function buildHTML(chat){
+
+          var html = `
+                    <div class="card">
+                      <div class="card-body">
+                        <p>${ chat.name }  ${chat.created_at}</p>
+                        <p>${chat.text}</p>
+                      </div>
+                    </div>`
+
+
+          return html
+        }
+
+        $('#ajax-add-post').on('submit', function (e) {
+            console.log('test')
+            e.preventDefault();
+
+            $.ajax({
+                'url': '{% url "board:ajax_chat_add" %}',
+                'type': 'POST',
+                'data': {
+                    'name': $('#id_name').val(),
+                    'text': $('#id_text').val(),
+                    'board_pk': $('.mb-3').attr('board-id')
+                },
+                'dataType': 'json'
+            })
+            .done(function(data){
+              var html = buildHTML(data);
+              $('.card').last().after(html)
+              $('#id_text').val('')
+
+            })
+            .fail(function(){
+              alert('error');
+            })
+        });
+
+    });
+    </script>
+
+{% endblock %}
